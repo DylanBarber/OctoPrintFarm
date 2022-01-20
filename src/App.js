@@ -17,8 +17,9 @@ function App() {
   //   console.log(document.getElementById('file').value)
   // }
 
-  const submitForm = () => {
-    ipcRenderer.invoke('openDialog')
+  const submitForm = async () => {
+    const res = await ipcRenderer.sendSync('openDialog')
+    console.log(res.filePaths[0])
   
     // axios
     //   .post('http://192.168.0.190/api/files/local', formData, {
@@ -41,7 +42,7 @@ function App() {
         </p>
         {/* <button onClick={() => test()}>Test</button> */}
         <input id='file' type='file'></input>
-        <button onClick={() => submitForm()}>Test</button>
+        <button onClick={async () => await submitForm()}>Test</button>
       </header>
     </div>
   );

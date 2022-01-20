@@ -4,9 +4,16 @@ const { app, BrowserWindow, dialog, ipcMain } = require('electron');
 const isDev = require('electron-is-dev');
 require('@electron/remote/main')
 
-ipcMain.handle('openDialog', async (event) => {
-  dialog.showOpenDialog({ properties: ['openFile', 'multiSelections'] })
-  // return result
+ipcMain.on('openDialog', async (event) => {
+  event.returnValue = await dialog.showOpenDialog(
+    {
+      properties: ['openFile'],
+      filters: [
+        { name: 'GCODE', extensions: ['gcode'] },
+      ]
+    
+    })
+      
 })
 
 function createWindow() {

@@ -1,8 +1,13 @@
 const path = require('path');
 
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, dialog, ipcMain } = require('electron');
 const isDev = require('electron-is-dev');
-// require('@electron/remote/main').initialize()
+require('@electron/remote/main')
+
+ipcMain.handle('openDialog', async (event) => {
+  dialog.showOpenDialog({ properties: ['openFile', 'multiSelections'] })
+  // return result
+})
 
 function createWindow() {
   // Create the browser window.
@@ -11,7 +16,9 @@ function createWindow() {
     height: 600,
     webPreferences: {
       nodeIntegration: true,
-      // enableRemoteModule: true
+      enableRemoteModule: true,
+      contextIsolation: false,
+      webSecurity: false
     },
   });
 

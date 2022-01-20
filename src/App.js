@@ -20,6 +20,9 @@ function App() {
   const submitForm = async () => {
     const res = await ipcRenderer.sendSync('openDialog')
     console.log(res.filePaths[0])
+    const test1 = await fs.readFileSync(res.filePaths[0], {encoding:'utf8', flag:'r'})
+    console.log(test1)
+
   
     // axios
     //   .post('http://192.168.0.190/api/files/local', formData, {

@@ -20,20 +20,32 @@ function App() {
   const submitForm = async () => {
     const res = await ipcRenderer.sendSync('openDialog')
     console.log(res.filePaths[0])
-    const test1 = await fs.readFileSync(res.filePaths[0], {encoding:'utf8', flag:'r'})
-    console.log(test1)
+    // const fileData = await fs.readFileSync(res.filePaths[0], {encoding:'utf8', flag:'r'})
+    // const fileData = await fs.createReadStream(res.filePaths[0], {encoding:'utf8', flag:'r'})
+    const fileData = await fs.readFileSync(res.filePaths[0])
+    const fileBlob = new Blob(fileData)
 
-  
-    // axios
-    //   .post('http://192.168.0.190/api/files/local', formData, {
-    //     headers: {
-    //       'X-Api-Key': 'C9FA6D1FD11F452383F4CF773436B70C'
-    //     }
-    //   })
-    // .then((res) => {
-    //     alert("File Upload success");
-    //   })
-    //   .catch((err) => alert("File Upload Error"));
+
+
+    const formData = new FormData()
+    formData.append('file', fileBlob, 'readStreamTest.gcode')
+    formData.append('select', true)
+    formData.append('print', false) // TODO: Put conditional check box for starting print immediately here!
+    
+
+
+    axios
+      .post('http://192.168.0.190/api/files/local', formData, {
+        headers: {
+          ...formData.get('headers'),
+          'X-Api-Key': 'C9FA6D1FD11F452383F4CF773436B70C',
+          'Content-Type': 'multipart/form-data'
+        }
+      })
+    .then((res) => {
+        alert("File Upload success");
+      })
+      .catch((err) => alert("File Upload Error"));
   };
 
   return (

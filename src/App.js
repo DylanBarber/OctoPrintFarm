@@ -1,14 +1,8 @@
-import logo from './logo.svg';
 import './App.css';
 import * as axios from 'axios'
 import { useState } from 'react';
 const { ipcRenderer } = window.require("electron");
-
-// const electron = window.require('electron')
-// const remote = electron.remote
-// const {BrowserWindow, dialog, Menu} = remote
 const fs = window.require('fs')
-const path = window.require('path')
 
 
 function App() {

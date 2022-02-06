@@ -66,11 +66,42 @@ function App() {
     }
   };
 
+
+  const [printerIp, setPrinterIp] = useState('');
+  const [printerApiKey, setPrinterApiKey] = useState('');
+
+  const addPrinter = async () => {
+
+    try {
+      const fileData = await fs.readFileSync('~/Documents/octoFarm/printerDefs.json', { encoding: 'utf-8' })
+      console.log(fileData)
+    } catch (err) {
+      if (err.message.includes('no such file or directory')) {
+        await fs.mkdirSync('~/Documents/octoFarm', { recursive: true })
+        await fs.writeFileSync('~/Documents/octoFarm/printerDefs.json', JSON.stringify([{
+          printerIp: '192.168.0.0',
+          printerApiKey: 'testApiKey'
+        }]), { ecoding: 'utf-8'})
+
+      } else {
+        console.log("Something went wrong... Maybe this application doesn't have read/write access to your filesystem? Try running as administrator")
+      }
+    }
+  }
+
   return (
     <div className="App">
       <button onClick={async () => await selectFile()}>Select File</button>
       {fileInfoState.fileName ?? <p>{fileInfoState.fileName}</p>}
       <button onClick={async () => await uploadFile()}>Upload File</button>
+
+      <label>Printer IP</label>
+      <input value={printerIp} onChange={(e) => setPrinterIp(e.target.value)}></input>
+
+      <label>OctoPrint API Key</label>
+      <input value={printerApiKey} onChange={(e) => setPrinterApiKey(e.target.value)}></input>
+
+      <button onClick={addPrinter}>Add Printer</button>
     </div>
   );
 }

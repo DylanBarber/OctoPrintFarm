@@ -1,6 +1,7 @@
 import './App.css';
 import * as axios from 'axios'
 import { useEffect, useState } from 'react';
+import PrinterCard from './components/PrinterCard';
 const { ipcRenderer } = window.require("electron");
 const fs = window.require('fs')
 
@@ -14,6 +15,7 @@ function App() {
   const [printerIp, setPrinterIp] = useState('');
   const [printerApiKey, setPrinterApiKey] = useState('');
   const [printerDefs, setPrinterDefs] = useState(undefined);
+  const [printImmediately, setPrintImmediately] = useState(false);
 
   useEffect(() => {
     loadPrinterDefs();
@@ -57,21 +59,44 @@ function App() {
       // TODO: Put validation errors
     } else {
       // Start the read buffer and slap that bad boy in a Blob for file upload
-      const fileData = await fs.readFileSync(filePath)
-      const fileBlob = new Blob(fileData)
-
+      
+      // const fileData = await fs.readFileSync(filePath)
+      // const fileBlob = new Blob(fileData, {type: 'text/html'})
+      const fileData = fs.readFileSync(filePath, {encoding: 'utf-8'})
+      const fileBlob = new Blob([fileData])
       // Create FormData request object
-      const formData = new FormData()
+      // const formData = new FormData()
+      // formData.append('file', fileBlob, fileName)
+      // formData.append('select', true)
+      // formData.append('print', printImmediately) // TODO: Put conditional check box for starting print immediately here!
+
+      // //Send the axios request
+      // axios
+      //   .post('http://192.168.0.190/api/files/local', formData, {
+      //     headers: {
+      //       ...formData.get('headers'),
+      //       'X-Api-Key': 'C9FA6D1FD11F452383F4CF773436B70C',
+      //       'Content-Type': 'multipart/form-data'
+      //     }
+      //   })
+      //   .then((res) => {
+      //     alert("File Upload success");
+      //   })
+      //   .catch((err) => alert("File Upload Error"));
+
+      printerDefs.forEach(printer => {
+        if (printer.isChecked) {
+          const formData = new FormData()
       formData.append('file', fileBlob, fileName)
       formData.append('select', true)
-      formData.append('print', false) // TODO: Put conditional check box for starting print immediately here!
+      formData.append('print', printImmediately) // TODO: Put conditional check box for starting print immediately here!
 
       //Send the axios request
       axios
-        .post('http://192.168.0.190/api/files/local', formData, {
+        .post(`http://${printer.printerIp}/api/files/local`, formData, {
           headers: {
             ...formData.get('headers'),
-            'X-Api-Key': 'C9FA6D1FD11F452383F4CF773436B70C',
+            'X-Api-Key': printer.printerApiKey,
             'Content-Type': 'multipart/form-data'
           }
         })
@@ -79,6 +104,8 @@ function App() {
           alert("File Upload success");
         })
         .catch((err) => alert("File Upload Error"));
+        }
+      })
     }
   };
 
@@ -107,20 +134,35 @@ function App() {
         loadPrinterDefs();
 
       } else {
-        console.log("Something went wrong... Maybe this application doesn't have read/write access to your filesystem? Try running as administrator")
+        console.error("Something went wrong... Maybe this application doesn't have read/write access to your filesystem? Try running as administrator")
       }
     }
+  }
+
+  const updatePrinter = async (index, printer) => {
+
+    const fileData = await fs.readFileSync('~/Documents/octoFarm/printerDefs.json', { encoding: 'utf-8' })
+      const printerDefData = JSON.parse(fileData);
+
+      if (printerDefData[index].printerIp === printer.printerIp) {
+        printerDefData[index] = printer
+        await fs.writeFileSync('~/Documents/octoFarm/printerDefs.json', JSON.stringify(printerDefData));
+        loadPrinterDefs();
+      } else {
+        //TODO : write logic to fail over to searching by IP in the array
+        console.error('This is broke')
+      }
+
   }
 
   let printerCards = null;
 
   if (printerDefs) {
-    printerCards = printerDefs.map(printer => {
+    console.log(printerDefs)
+    printerCards = printerDefs.map((printer, index) => {
+
       return (
-        <div>
-          <h1>{printer.printerIp}</h1>
-          <h1>{printer.printerApiKey}</h1>
-        </div>
+        <PrinterCard printerModel={printer} index={index} updatePrinter={updatePrinter}/>
       )
     })
   }
@@ -128,6 +170,8 @@ function App() {
   return (
     <div className="App">
       <button onClick={async () => await selectFile()}>Select File</button>
+      <label>Run print immediately</label>
+      <input checked={printImmediately} onChange={e => setPrintImmediately(e.target.checked)} type='checkbox'/>
       {fileInfoState.fileName ?? <p>{fileInfoState.fileName}</p>}
       <button onClick={async () => await uploadFile()}>Upload File</button>
 
